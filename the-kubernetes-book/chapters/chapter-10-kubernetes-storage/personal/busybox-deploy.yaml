@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox-rwo
+  namespace: kubernetes-book
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox-rwo
+  template:
+    metadata:
+      labels:
+        app: busybox-rwo
+    spec:
+      # Force BusyBox onto the node where PostgreSQL is running.
+      # This allows both Pods to use the same RWO volume.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: postgres-rwo
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: busybox
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              while true; do
+                echo "$(date) - written by $(hostname)" \
+                  > /shared/busybox.txt
+
+                echo "Current file content:"
+                cat /shared/busybox.txt
+
+                sleep 10
+              done
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /shared
+      volumes:
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: shared-rwo-pvc

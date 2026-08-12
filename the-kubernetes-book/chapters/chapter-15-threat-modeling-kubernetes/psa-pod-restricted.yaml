@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: psa-pod-restricted
+  namespace: psa-test
+spec:
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: psa-ctr
+    image: nginx
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL

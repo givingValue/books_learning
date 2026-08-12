@@ -1,0 +1,21 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gtw-prod-6
+  namespace: ns-infra
+  annotations:
+    # This was added due to I had a port collision in my local cluster
+    networking.istio.io/service-type: NodePort
+spec:
+  gatewayClassName: istio
+  listeners:
+  - name: http
+    hostname: "myapp.com"
+    protocol: HTTP
+    port: 8080
+    allowedRoutes:
+      namespaces:
+        from: Selector
+        selector:
+          matchLabels:
+            gtw-prod-6: "yes"
